@@ -10,11 +10,17 @@
             "maxDuration": 60
         }
     },
-    "env": [
-        "DATABASE_URL",
-        "API_KEY",
-        "NODE_ENV"
-    ],
+    "env": {
+        "DATABASE_URL": {
+            "description": "Database connection URL"
+        },
+        "API_KEY": {
+            "description": "API key for authentication"
+        },
+        "NODE_ENV": {
+            "description": "Node environment"
+        }
+    },
     "git": {
         "deploymentEnabled": {
             "main": true
