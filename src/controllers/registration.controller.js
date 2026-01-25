@@ -21,5 +21,5 @@ exports.publicList = async (_, res) => {
 };
 
 exports.healthcheck = async (_, res) => {
-  res.json({status: "ok"});
+  res.json({status: "ok",mongo : process.env.MONGO_URI ? "connected" : "disconnected"});
 };
