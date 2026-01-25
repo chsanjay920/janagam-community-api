@@ -1,23 +1,15 @@
 {
-    "version": 2,
-    "buildCommand": "npm run build",
-    "devCommand": "npm run dev",
-    "installCommand": "npm install",
-    "framework": "nodejs",
-    "functions": {
-        "api/**/*.js": {
-            "memory": 1024,
-            "maxDuration": 60
-        }
-    },
-    "env": {
-        "DATABASE_URL": "@database_url",
-        "API_KEY": "@api_key",
-        "NODE_ENV": "production"
-    },
-    "git": {
-        "deploymentEnabled": {
-            "main": true
-        }
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/app.js",
+      "use": "@vercel/node"
     }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/app.js"
+    }
+  ]
 }
