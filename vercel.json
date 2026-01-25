@@ -11,15 +11,9 @@
         }
     },
     "env": {
-        "DATABASE_URL": {
-            "description": "Database connection URL"
-        },
-        "API_KEY": {
-            "description": "API key for authentication"
-        },
-        "NODE_ENV": {
-            "description": "Node environment"
-        }
+        "DATABASE_URL": "@database_url",
+        "API_KEY": "@api_key",
+        "NODE_ENV": "production"
     },
     "git": {
         "deploymentEnabled": {
