@@ -1,4 +1,5 @@
 const service = require("../services/registration.service");
+const mongoose = require("mongoose");
 
 exports.create = async (req, res) => {
   res.status(201).json(await service.registerMember(req.body));
@@ -21,5 +22,15 @@ exports.publicList = async (_, res) => {
 };
 
 exports.healthcheck = async (_, res) => {
+  try {
+    const state = mongoose.connection.readyState;
+    // 0 = disconnected, 1 = connected
+    res.json({
+      mongoState: state,
+      connected: state === 1,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
   res.json({status: "ok",mongo : process.env.MONGO_URI});
 };
