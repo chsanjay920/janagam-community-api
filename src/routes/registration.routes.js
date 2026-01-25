@@ -31,5 +31,6 @@ router.post("/admin/login", adminCtrl.login);
  *     summary: Public approved members
  */
 router.get("/public/members", ctrl.publicList);
+router.get("/public/healthcheck", ctrl.healthcheck);
 
 module.exports = router;

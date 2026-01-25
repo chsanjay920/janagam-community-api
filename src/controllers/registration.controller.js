@@ -19,3 +19,7 @@ exports.reject = async (req, res) => {
 exports.publicList = async (_, res) => {
   res.json(await service.getApproved());
 };
+
+exports.healthcheck = async (_, res) => {
+  res.json({status: "ok"});
+};
