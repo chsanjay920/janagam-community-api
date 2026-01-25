@@ -3,7 +3,9 @@ const express = require("express");
 const swaggerUI = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 const cors = require('cors');
+const connectDB = require("./config/db");
 
+connectDB();
 const app = express();
 app.use(express.json());
 
