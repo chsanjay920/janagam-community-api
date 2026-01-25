@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/registration.controller");
+const adminCtrl = require("../controllers/admin.controller");
 const auth = require("../middlewares/auth.middleware");
 
 /**
@@ -20,15 +21,8 @@ router.post("/register", ctrl.create);
  */
 router.get("/admin/registrations", auth, ctrl.list);
 
-/**
- * @swagger
- * /api/admin/registrations/{id}/approve:
- *   patch:
- *     summary: Approve registration
- */
-router.patch("/admin/registrations/:id/approve", auth, ctrl.approve);
-
-router.patch("/admin/registrations/:id/reject", auth, ctrl.reject);
+router.post("/admin/registrations/save", adminCtrl.create);
+router.post("/admin/login", adminCtrl.login);
 
 /**
  * @swagger
