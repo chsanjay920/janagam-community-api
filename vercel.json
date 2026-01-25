@@ -1,0 +1,23 @@
+{
+    "version": 2,
+    "buildCommand": "npm run build",
+    "devCommand": "npm run dev",
+    "installCommand": "npm install",
+    "framework": "nodejs",
+    "functions": {
+        "api/**/*.js": {
+            "memory": 1024,
+            "maxDuration": 60
+        }
+    },
+    "env": [
+        "DATABASE_URL",
+        "API_KEY",
+        "NODE_ENV"
+    ],
+    "git": {
+        "deploymentEnabled": {
+            "main": true
+        }
+    }
+}
