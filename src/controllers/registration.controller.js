@@ -36,18 +36,21 @@ exports.publicList = async (_, res) => {
 //   }
 // };
 
-exports.healthcheck  = async (req, res) => {
+
+exports.healthcheck = async (req, res) => {
   try {
     await connectDB();
 
     const state = mongoose.connection.readyState;
 
-    res.json({
+    return res.json({
       mongoState: state,
       connected: state === 1,
     });
   } catch (err) {
-    res.status(500).json({
+    console.error("Mongo error:", err);
+
+    return res.status(500).json({
       error: err.message,
     });
   }
