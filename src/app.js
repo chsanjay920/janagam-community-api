@@ -5,7 +5,7 @@ const swaggerSpec = require("./config/swagger");
 const cors = require('cors');
 const connectDB = require("./config/db");
 
-await connectDB();
+connectDB();
 const app = express();
 app.use(express.json());
 

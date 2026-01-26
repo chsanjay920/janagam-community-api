@@ -1,5 +1,6 @@
 const service = require("../services/registration.service");
 const mongoose = require("mongoose");
+const connectDB = require("../config/db");
 
 exports.create = async (req, res) => {
   res.status(201).json(await service.registerMember(req.body));
