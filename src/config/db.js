@@ -1,9 +1,17 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-module.exports = async () => {
-  await mongoose.connect(process.env.MONGO_URI, {
-    ssl: true,
+let isConnected = false;
+
+export const connectDB = async () => {
+  if (isConnected) return;
+
+  if (!process.env.MONGO_URI) {
+    throw new Error("MONGO_URI missing");
+  }
+
+  const db = await mongoose.connect(process.env.MONGO_URI, {
+    bufferCommands: false,
   });
-  console.log("MongoDB connected");
-};
 
+  isConnected = db.connections[0].readyState === 1;
+};

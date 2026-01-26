@@ -21,16 +21,34 @@ exports.publicList = async (_, res) => {
   res.json(await service.getApproved());
 };
 
-exports.healthcheck = async (_, res) => {
+
+// exports.healthcheck = async (_, res) => {
+//   try {
+//     const state = mongoose.connection.readyState;
+
+//     res.json({
+//       status: "ok",
+//       mongoState: state,
+//       connected: state === 1,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
+exports.healthcheck  = async (req, res) => {
   try {
+    await connectDB();
+
     const state = mongoose.connection.readyState;
-    // 0 = disconnected, 1 = connected
+
     res.json({
       mongoState: state,
       connected: state === 1,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
-  res.json({status: "ok",mongo : process.env.MONGO_URI});
 };
