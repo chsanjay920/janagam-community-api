@@ -19,7 +19,9 @@ router.post("/register", ctrl.create);
  *     summary: List all registrations
  *     tags: [Admin]
  */
-router.get("/admin/registrations", auth, ctrl.list);
+
+router.get("/admin/registrationslist", auth, ctrl.list);
+router.get("/admin/registrations", auth, ctrl.gridlist);
 
 router.post("/admin/registrations/save", adminCtrl.create);
 router.post("/admin/login", adminCtrl.login);

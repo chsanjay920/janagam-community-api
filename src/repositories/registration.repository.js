@@ -17,6 +17,24 @@ class RegistrationRepository {
   findAll() {
     return Registration.find();
   }
+  async findAllWithFilters(filter, pageNumber, pageSize, sortBy, sortDirection) {
+    const skip = (pageNumber - 1) * pageSize;
+
+
+    const queryFilter = filter || {};
+
+    console.log(queryFilter, pageNumber, pageSize, sortBy, sortDirection);
+
+    const data = await Registration.find(queryFilter)
+      .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
+      .skip(skip)
+      .limit(pageSize)
+      .lean();
+
+    const count = await Registration.countDocuments(queryFilter);
+
+    return { data, count };
+  }
   findById(id) {
     return Registration.findById(id);
   }

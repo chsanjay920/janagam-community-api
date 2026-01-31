@@ -10,6 +10,10 @@ exports.list = async (_, res) => {
   res.json(await service.getAll());
 };
 
+exports.gridlist = async (req, res) => {
+  res.json(await service.getGridList(req.query.filter,req.query.pagenumber,req.query.pagesize,req.query.sortby,req.query.sortdirection));
+};
+
 exports.approve = async (req, res) => {
   res.json(await service.approve(req.params.id));
 };
