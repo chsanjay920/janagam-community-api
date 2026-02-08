@@ -27,21 +27,6 @@ exports.publicList = async (_, res) => {
 };
 
 
-// exports.healthcheck = async (_, res) => {
-//   try {
-//     const state = mongoose.connection.readyState;
-
-//     res.json({
-//       status: "ok",
-//       mongoState: state,
-//       connected: state === 1,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-
 exports.healthcheck = async (req, res) => {
   try {
     await connectDB();

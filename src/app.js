@@ -9,8 +9,10 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: true,
+    origin: "http://localhost:4200",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
