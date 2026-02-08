@@ -22,8 +22,8 @@ exports.reject = async (req, res) => {
   res.json(await service.reject(req.params.id));
 };
 
-exports.publicList = async (_, res) => {
-  res.json(await service.getApproved());
+exports.publicList = async (req, res) => {
+  res.json(await service.getApproved(req.query.filter,req.query.pagenumber,req.query.pagesize,req.query.sortby,req.query.sortdirection));
 };
 
 
