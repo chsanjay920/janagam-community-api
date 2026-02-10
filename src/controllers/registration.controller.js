@@ -3,27 +3,33 @@ const mongoose = require("mongoose");
 const connectDB = require("../config/db");
 
 exports.create = async (req, res) => {
+  await connectDB();
   res.status(201).json(await service.registerMember(req.body));
 };
 
 exports.list = async (_, res) => {
+  await connectDB();
   res.json(await service.getAll());
 };
 
 exports.gridlist = async (req, res) => {
-  res.json(await service.getGridList(req.query.filter,req.query.pagenumber,req.query.pagesize,req.query.sortby,req.query.sortdirection));
+  await connectDB();
+  res.json(await service.getGridList(req.query.filter, req.query.pagenumber, req.query.pagesize, req.query.sortby, req.query.sortdirection));
 };
 
 exports.approve = async (req, res) => {
+  await connectDB();
   res.json(await service.approve(req.params.id));
 };
 
 exports.reject = async (req, res) => {
+  await connectDB();
   res.json(await service.reject(req.params.id));
 };
 
 exports.publicList = async (req, res) => {
-  res.json(await service.getApproved(req.query.filter,req.query.pagenumber,req.query.pagesize,req.query.sortby,req.query.sortdirection));
+  await connectDB();
+  res.json(await service.getApproved(req.query.filter, req.query.pagenumber, req.query.pagesize, req.query.sortby, req.query.sortdirection));
 };
 
 

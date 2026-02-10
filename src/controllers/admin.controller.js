@@ -6,6 +6,7 @@ const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 
 exports.create = async (req, res) => {
+  await connectDB();
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -42,6 +43,7 @@ exports.create = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  await connectDB();
   const admin = await repo.findByEmail(req.body.email);
   if (!admin || !(await bcrypt.compare(req.body.password, admin.password)))
     return res.status(401).json({ message: "Invalid credentials" });
