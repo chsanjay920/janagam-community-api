@@ -4,6 +4,7 @@ const repo = require("../repositories/admin.repository");
 const { generateToken, registerAdmin, checkIsAdminUserExist } = require("../services/auth.service");
 const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
+const connectDB = require("../config/db");
 
 exports.create = async (req, res) => {
   await connectDB();
