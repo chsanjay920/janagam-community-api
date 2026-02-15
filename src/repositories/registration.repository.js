@@ -58,7 +58,28 @@ class RegistrationRepository {
       ApprovedRegistration: approvedRegistration,
       AverageRating: result[0].averageRating.toFixed(1),
       TotalRatings: result[0].totalRatings,
-      visitorsCount: usersCount.numberOfUsers
+      VisitorsCount: usersCount.numberOfUsers
+    };
+  }
+  async getAdminStates() {
+    const usersCount = await UsersCount.findOne();
+    const result = await Rating.aggregate([
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: "$rating" },
+          totalRatings: { $sum: 1 }
+        }
+      }
+    ]);
+    return {
+      TotalMembers:await Registration.countDocuments(),
+      PendingRegistration:await Registration.countDocuments({status:"PENDING"}),
+      ApprovedRegistration:await Registration.countDocuments({status:"APPROVED"}),
+      RejectedRegistration:await Registration.countDocuments({status:"REJECTED"}),
+      AverageRating:result[0].averageRating.toFixed(1),
+      TotalRatings:result[0].totalRatings,
+      VisitorsCount:usersCount.numberOfUsers,
     };
   }
   async findAllWithFilters(

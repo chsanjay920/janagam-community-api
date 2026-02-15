@@ -22,6 +22,11 @@ exports.getStates = async (_, res) => {
   res.json(await service.getStates());
 };
 
+exports.getAdminStates = async (_, res) => {
+  await connectDB();
+  res.json(await service.getAdminStates());
+};
+
 exports.list = async (_, res) => {
   await connectDB();
   res.json(await service.getAll());
