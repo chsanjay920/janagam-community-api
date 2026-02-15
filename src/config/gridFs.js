@@ -14,6 +14,7 @@ const initGridFS = () => {
 };
 
 const getGridFSBucket = () => {
+  initGridFS();
   if (!gridFSBucket) {
     throw new Error("GridFS not initialized");
   }
