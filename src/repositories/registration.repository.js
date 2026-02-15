@@ -1,6 +1,7 @@
 // Registration repository
 const Registration = require("../models/Registration");
 const Rating = require("../models/Rating");
+const UsersCount = require("../models/UsersCount");
 const RegistrationCounter = require("../models/RegistrationCounter");
 
 class RegistrationRepository {
@@ -18,6 +19,35 @@ class RegistrationRepository {
   }
   findAll() {
     return Registration.find();
+  }
+  async getStates() {
+    const usersCount = await UsersCount.findOneAndUpdate(
+      {},
+      { $inc: { numberOfUsers: 1 } },
+      {
+        new: true,
+        upsert: true
+      }
+    );
+    const queryFilter = {
+      status: "APPROVED",
+    };
+    const approvedRegistration = await Registration.countDocuments(queryFilter);
+    const result = await Rating.aggregate([
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: "$rating" },
+          totalRatings: { $sum: 1 }
+        }
+      }
+    ]);
+    return {
+      ApprovedRegistration: approvedRegistration,
+      AverageRating: result[0].averageRating.toFixed(1),
+      TotalRatings: result[0].totalRatings,
+      visitorsCount: usersCount.numberOfUsers
+    };
   }
   async findAllWithFilters(
     filter,

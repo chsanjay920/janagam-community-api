@@ -17,6 +17,11 @@ exports.submitRating = async (req, res) => {
   res.status(201).json(await service.submitRating(req.body));
 };
 
+exports.getStates = async (_, res) => {
+  await connectDB();
+  res.json(await service.getStates());
+};
+
 exports.list = async (_, res) => {
   await connectDB();
   res.json(await service.getAll());

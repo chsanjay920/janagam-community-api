@@ -38,5 +38,6 @@ router.post("/admin/login", adminCtrl.login);
  */
 router.get("/public/members", ctrl.publicList);
 router.get("/public/healthcheck", ctrl.healthcheck);
+router.get("/states", ctrl.getStates);
 
 module.exports = router;
