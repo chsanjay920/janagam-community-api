@@ -21,6 +21,7 @@ router.post("/register", ctrl.create);
  */
 
 router.get("/admin/registrationslist", auth, ctrl.list);
+router.post("/submitrating", ctrl.submitRating);
 router.post("/admin/registration/approve/:id", auth, ctrl.approve);
 router.post("/admin/registration/reject/:id", auth, ctrl.reject);
 

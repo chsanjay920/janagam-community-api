@@ -1,5 +1,6 @@
 // Registration repository
 const Registration = require("../models/Registration");
+const Rating = require("../models/Rating");
 const RegistrationCounter = require("../models/RegistrationCounter");
 
 class RegistrationRepository {
@@ -11,6 +12,9 @@ class RegistrationRepository {
     );
     data.registrationId = `${counter.seq.toString().padStart(4, "0")}`;
     return Registration.create(data);
+  }
+  async submitRating(data) {
+    return Rating.create(data);
   }
   findAll() {
     return Registration.find();
