@@ -6,6 +6,18 @@ const RegistrationCounter = require("../models/RegistrationCounter");
 
 class RegistrationRepository {
   async create(data) {
+    const errors = [];
+
+    if (!data.firstName || !data.lastName) errors.push("First name and last name are required.");
+    if (!data.gender) errors.push("Gender is required.");
+    if (!data.dob) errors.push("Date of birth is required.");
+    if (!data.mobile || !/^[0-9]{10}$/.test(data.mobile)) errors.push("Valid 10-digit mobile number is required.");
+    if (!data.email || !/^\S+@\S+\.\S+$/.test(data.email)) errors.push("Valid email is required.");
+    if (data.aadhaar && !/^[0-9]{12}$/.test(data.aadhaar)) errors.push("Aadhaar must be 12 digits.");
+
+    if (errors.length > 0) {
+      throw new Error(errors.join(" "));
+    }
     const counter = await RegistrationCounter.findByIdAndUpdate(
       { _id: "registrationId" },
       { $inc: { seq: 1 } },
