@@ -1,10 +1,42 @@
 const service = require("../services/registration.service");
 const mongoose = require("mongoose");
 const connectDB = require("../config/db");
+const { getGridFSBucket } = require("../config/gridFs");
+
 
 exports.create = async (req, res) => {
-  await connectDB();
-  res.status(201).json(await service.registerMember(req.body));
+  try {
+    const data = req.body;
+
+    if (req.file) {
+      const bucket = getGridFSBucket();
+
+      const uploadStream = bucket.openUploadStream(req.file.originalname, {
+        contentType: req.file.mimetype
+      });
+
+      uploadStream.end(req.file.buffer);
+
+      uploadStream.on("finish", async () => {
+        data.documentId = uploadStream.id; // 🔥 store ObjectId reference
+
+        const result = await service.registerMember(data);
+
+        res.status(201).json(result);
+      });
+
+      uploadStream.on("error", (err) => {
+        res.status(500).json({ message: err.message });
+      });
+
+    } else {
+      const result = await service.registerMember(data);
+      res.status(201).json(result);
+    }
+
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
 };
 exports.submitRating = async (req, res) => {
   await connectDB();

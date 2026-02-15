@@ -39,6 +39,11 @@ const registrationSchema = new mongoose.Schema({
 
   qualification: String,
   course: String,
+  document: String,
+  documentId: {
+  type: mongoose.Schema.Types.ObjectId
+},
+
   status: {
     type: String,
     enum: ["PENDING", "APPROVED", "REJECTED"],
