@@ -7,6 +7,7 @@ const { getGridFSBucket } = require("../config/gridFs");
 exports.create = async (req, res) => {
   try {
     const data = req.body;
+    await connectDB();
 
     if (req.file) {
       const bucket = getGridFSBucket();
