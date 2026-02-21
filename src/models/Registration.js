@@ -22,6 +22,12 @@ const registrationSchema = new mongoose.Schema({
   email: String,
   aadhaar: String,
   subCaste: String,
+  rationCardNo: String,
+  spouseName: String,
+  spouseOccupation: String,
+  numberOfChildren: String,
+  childrenNames: String,
+  jobDescription: String,
 
   fatherName: String,
   fatherOccupation: String,

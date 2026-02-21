@@ -6,37 +6,55 @@ const RegistrationCounter = require("../models/RegistrationCounter");
 
 class RegistrationRepository {
   async create(data) {
-  const errors = [];
+    const errors = [];
 
-  if (!data.firstName || !data.lastName)
-    errors.push("First name and last name are required.");
+    if (!data.firstName || !data.lastName)
+      errors.push("First name and last name are required.");
 
-  if (!data.gender)
-    errors.push("Gender is required.");
+    if (!data.gender)
+      errors.push("Gender is required.");
 
-  if (!data.dob)
-    errors.push("Date of birth is required.");
+    if (!data.dob)
+      errors.push("Date of birth is required.");
 
-  if (!data.mobile || !/^[0-9]{10}$/.test(data.mobile))
-    errors.push("Valid 10-digit mobile number is required.");
+    if (!data.rationCardNo)
+      errors.push("Ration card number is required.");
 
-  if (!data.email || !/^\S+@\S+\.\S+$/.test(data.email))
-    errors.push("Valid email is required.");
+    if (!data.spouseName)
+      errors.push("Spouse name is required.");
+    
+    if (!data.spouseOccupation)
+      errors.push("Spouse occupation is required.");
 
-  if (data.aadhaar && !/^[0-9]{12}$/.test(data.aadhaar))
-    errors.push("Aadhaar must be 12 digits.");
+    if (!data.numberOfChildren)
+      errors.push("Number of children is required.");
 
-  if (errors.length > 0)
-    throw new Error(errors.join(" "));
-  const counter = await RegistrationCounter.findByIdAndUpdate(
-    { _id: "registrationId" },
-    { $inc: { seq: 1 } },
-    { new: true, upsert: true }
-  );
+    if (!data.childrenNames)
+      errors.push("Children names are required.");
+    
+    if (!data.jobDescription)
+      errors.push("Job description is required.");
 
-  data.registrationId = counter.seq.toString().padStart(4, "0");
+    if (!data.mobile || !/^[0-9]{10}$/.test(data.mobile))
+      errors.push("Valid 10-digit mobile number is required.");
 
-  return Registration.create(data);
+    if (!data.email || !/^\S+@\S+\.\S+$/.test(data.email))
+      errors.push("Valid email is required.");
+
+    if (data.aadhaar && !/^[0-9]{12}$/.test(data.aadhaar))
+      errors.push("Aadhaar must be 12 digits.");
+
+    if (errors.length > 0)
+      throw new Error(errors.join(" "));
+    const counter = await RegistrationCounter.findByIdAndUpdate(
+      { _id: "registrationId" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    data.registrationId = counter.seq.toString().padStart(4, "0");
+
+    return Registration.create(data);
   }
   async submitRating(data) {
     return Rating.create(data);
@@ -85,13 +103,13 @@ class RegistrationRepository {
       }
     ]);
     return {
-      TotalMembers:await Registration.countDocuments(),
-      PendingRegistration:await Registration.countDocuments({status:"PENDING"}),
-      ApprovedRegistration:await Registration.countDocuments({status:"APPROVED"}),
-      RejectedRegistration:await Registration.countDocuments({status:"REJECTED"}),
-      AverageRating:result[0].averageRating.toFixed(1),
-      TotalRatings:result[0].totalRatings,
-      VisitorsCount:usersCount.numberOfUsers,
+      TotalMembers: await Registration.countDocuments(),
+      PendingRegistration: await Registration.countDocuments({ status: "PENDING" }),
+      ApprovedRegistration: await Registration.countDocuments({ status: "APPROVED" }),
+      RejectedRegistration: await Registration.countDocuments({ status: "REJECTED" }),
+      AverageRating: result[0].averageRating.toFixed(1),
+      TotalRatings: result[0].totalRatings,
+      VisitorsCount: usersCount.numberOfUsers,
     };
   }
   async findAllWithFilters(
