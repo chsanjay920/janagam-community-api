@@ -1,6 +1,7 @@
 // Registration repository
 const Registration = require("../models/Registration");
 const Rating = require("../models/Rating");
+const DashboardData = require("../models/DashboardData");
 const UsersCount = require("../models/UsersCount");
 const RegistrationCounter = require("../models/RegistrationCounter");
 
@@ -22,7 +23,7 @@ class RegistrationRepository {
 
     if (!data.spouseName)
       errors.push("Spouse name is required.");
-    
+
     if (!data.spouseOccupation)
       errors.push("Spouse occupation is required.");
 
@@ -31,7 +32,7 @@ class RegistrationRepository {
 
     if (!data.childrenNames)
       errors.push("Children names are required.");
-    
+
     if (!data.jobDescription)
       errors.push("Job description is required.");
 
@@ -58,6 +59,9 @@ class RegistrationRepository {
   }
   async submitRating(data) {
     return Rating.create(data);
+  }
+  async updateDashboardData(data) {
+    return DashboardData.create(data);
   }
   findAll() {
     return Registration.find();
@@ -88,7 +92,13 @@ class RegistrationRepository {
       ApprovedRegistration: approvedRegistration,
       AverageRating: result[0].averageRating.toFixed(1),
       TotalRatings: result[0].totalRatings,
-      VisitorsCount: usersCount.numberOfUsers
+      VisitorsCount: usersCount.numberOfUsers,
+      DashboardData: await DashboardData
+        .find()
+        .select("typeCode description -_id")
+        .sort({ createdAt: -1 })
+        .limit(10)
+
     };
   }
   async getAdminStates() {

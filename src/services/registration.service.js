@@ -3,6 +3,7 @@ const repo = require("../repositories/registration.repository");
 
 exports.registerMember = (data) => repo.create(data);
 exports.submitRating = (data) => repo.submitRating(data);
+exports.updateDashboardData = (data) => repo.updateDashboardData(data);
 exports.getAll = () => repo.findAll();
 exports.getStates = async () => await repo.getStates();
 exports.getAdminStates = async () => await repo.getAdminStates();

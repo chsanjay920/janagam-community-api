@@ -50,6 +50,17 @@ exports.submitRating = async (req, res) => {
   res.status(201).json(await service.submitRating(req.body));
 };
 
+exports.updateDashboardData = async (req, res) => {
+  await connectDB();
+  var ip = req.headers["x-forwarded-for"]?.split(",")[0] || 
+    req.socket?.remoteAddress ||
+    req.ip ||
+    "";
+  req.body.ipAddress = ip;
+  req.body.createdDateTime = new Date();
+  res.status(201).json(await service.updateDashboardData(req.body));
+};
+
 exports.getStates = async (_, res) => {
   await connectDB();
   res.json(await service.getStates());
