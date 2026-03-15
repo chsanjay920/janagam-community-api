@@ -8,7 +8,13 @@ exports.create = async (req, res) => {
   try {
     const data = req.body;
     await connectDB();
-
+    if (data.children) {
+      try {
+        data.children = JSON.parse(data.children);
+      } catch (err) {
+        return res.status(400).json({ message: "Invalid children data format" });
+      }
+    }
     if (req.file) {
       const bucket = getGridFSBucket();
 

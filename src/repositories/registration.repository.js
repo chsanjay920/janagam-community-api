@@ -30,8 +30,17 @@ class RegistrationRepository {
     if (!data.numberOfChildren)
       errors.push("Number of children is required.");
 
-    if (!data.childrenNames)
-      errors.push("Children names are required.");
+    if (!Array.isArray(data.children) || data.children.length === 0) {
+      errors.push("Children details are required.");
+    } else {
+      data.children.forEach((child, index) => {
+        if (!child.name)
+          errors.push(`Child ${index + 1} name is required.`);
+
+        if (!child.qualification)
+          errors.push(`Child ${index + 1} qualification is required.`);
+      });
+    }
 
     if (!data.jobDescription)
       errors.push("Job description is required.");
@@ -47,6 +56,7 @@ class RegistrationRepository {
 
     if (errors.length > 0)
       throw new Error(errors.join(" "));
+
     const counter = await RegistrationCounter.findByIdAndUpdate(
       { _id: "registrationId" },
       { $inc: { seq: 1 } },
