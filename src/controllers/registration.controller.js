@@ -56,6 +56,14 @@ exports.submitRating = async (req, res) => {
   res.status(201).json(await service.submitRating(req.body));
 };
 
+exports.requestVerification = async (req, res) => {
+  await connectDB();
+  res.json(await service.mobileVerificationRequest(req.body.mobileNumber));
+};
+exports.verifyOTP = async (req, res) => {
+  await connectDB();
+  res.json(await service.verifyOTP(req.body.mobileNumber, req.body.otp));
+}
 exports.updateDashboardData = async (req, res) => {
   await connectDB();
   var ip = req.headers["x-forwarded-for"]?.split(",")[0] || 

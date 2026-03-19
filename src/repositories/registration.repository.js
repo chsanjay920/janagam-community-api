@@ -4,11 +4,32 @@ const Rating = require("../models/Rating");
 const DashboardData = require("../models/DashboardData");
 const UsersCount = require("../models/UsersCount");
 const RegistrationCounter = require("../models/RegistrationCounter");
+const jwt = require("jsonwebtoken");
+const twilio = require('twilio');
+const client = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN);
 
 class RegistrationRepository {
+  async validatedToken(token, mobileNumber) {
+    console.log("Validating token for mobile number:", mobileNumber);
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.mobileNumber === mobileNumber) {
+        console.log("mobile number verification successful for:", mobileNumber);
+        return decoded.mobileNumber;
+      }
+    } catch (err) {
+      console.error("Error validating token:", err);
+    }
+    return false;
+  }
   async create(data) {
     const errors = [];
-
+    if (
+      !data.mobileVerficationToken ||
+      !(await this.validatedToken(data.mobileVerficationToken, data.mobile))
+    ) {
+      errors.push("Mobile number verification failed.");
+    }
     if (!data.firstName || !data.lastName)
       errors.push("First name and last name are required.");
 
@@ -67,6 +88,62 @@ class RegistrationRepository {
 
     return Registration.create(data);
   }
+  async requestVerification(mobileNumber) {
+    this.sendOtp("+91" + mobileNumber);
+    return { message: "OTP sent to mobile number" };
+  }
+  async sendOtp(mobileNumber) {
+    try {
+      const verification = await client.verify.v2.services(process.env.VERIFY_SERVICE_SID)
+        .verifications
+        .create({
+          to: mobileNumber, // Must be in E.164 format (e.g., +919876543210)
+          channel: 'sms'
+        });
+
+      console.log(`OTP Sent! Status: ${verification.status}`);
+      return verification;
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+    }
+  }
+  async checkOtp(phoneNumber, codeFromUser) {
+    try {
+      const verificationCheck = await client.verify.v2.services(process.env.VERIFY_SERVICE_SID)
+        .verificationChecks
+        .create({
+          to: phoneNumber,
+          code: codeFromUser
+        });
+
+      if (verificationCheck.status === 'approved') {
+        console.log('User Verified Successfully!');
+        return true;
+      } else {
+        console.log('Invalid OTP.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+    }
+  }
+  async verifyOTP(mobileNumber, otp) {
+    console.log("Signing token with mobileNumber:", mobileNumber);
+    const token = this.generateTokenWithMobileNumber(mobileNumber);
+    if (this.checkOtp("+91" + mobileNumber, otp)) {
+      return { token };
+    }
+    return { message: "Invalid OTP" };
+  }
+
+  generateTokenWithMobileNumber(mobileNumber) {
+    return jwt.sign(
+      { mobileNumber },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+  }
+
   async submitRating(data) {
     return Rating.create(data);
   }

@@ -34,4 +34,6 @@ router.get("/public/healthcheck", ctrl.healthcheck);
 router.get("/states", ctrl.getStates);
 router.get("/admin/states", ctrl.getAdminStates);
 
+router.post("/mobileVerificationRequest", ctrl.requestVerification);
+router.post("/verifyOTP", ctrl.verifyOTP); 
 module.exports = router;
