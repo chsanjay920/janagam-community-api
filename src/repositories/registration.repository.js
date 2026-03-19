@@ -6,8 +6,17 @@ const UsersCount = require("../models/UsersCount");
 const RegistrationCounter = require("../models/RegistrationCounter");
 const jwt = require("jsonwebtoken");
 const twilio = require('twilio');
-const client = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN);
+const https = require('https');
 
+const agent = new https.Agent({
+  keepAlive: false
+});
+
+const client = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN, {
+  httpClient: new twilio.RequestClient({
+    agent
+  })
+});
 class RegistrationRepository {
   async validatedToken(token, mobileNumber) {
     console.log("Validating token for mobile number:", mobileNumber);
@@ -89,22 +98,33 @@ class RegistrationRepository {
     return Registration.create(data);
   }
   async requestVerification(mobileNumber) {
-    this.sendOtp("+91" + mobileNumber);
+    const result = await this.sendOtp("+91" + mobileNumber);
+
+    if (!result) {
+      throw new Error("Failed to send OTP");
+    }
+
     return { message: "OTP sent to mobile number" };
   }
   async sendOtp(mobileNumber) {
-    try {
-      const verification = await client.verify.v2.services(process.env.VERIFY_SERVICE_SID)
-        .verifications
-        .create({
-          to: mobileNumber, // Must be in E.164 format (e.g., +919876543210)
-          channel: 'sms'
-        });
+    let attempts = 3;
 
-      console.log(`OTP Sent! Status: ${verification.status}`);
-      return verification;
-    } catch (error) {
-      console.error('Error sending OTP:', error);
+    while (attempts--) {
+      try {
+        const verification = await client.verify.v2
+          .services(process.env.VERIFY_SERVICE_SID)
+          .verifications.create({
+            to: mobileNumber,
+            channel: 'sms'
+          });
+
+        return verification;
+      } catch (error) {
+        if (attempts === 0) {
+          console.error('Final OTP Error:', error);
+          return null;
+        }
+      }
     }
   }
   async checkOtp(phoneNumber, codeFromUser) {
@@ -130,7 +150,7 @@ class RegistrationRepository {
   async verifyOTP(mobileNumber, otp) {
     console.log("Signing token with mobileNumber:", mobileNumber);
     const token = this.generateTokenWithMobileNumber(mobileNumber);
-    if (this.checkOtp("+91" + mobileNumber, otp)) {
+    if (await this.checkOtp("+91" + mobileNumber, otp)) {
       return { token };
     }
     return { message: "Invalid OTP" };
