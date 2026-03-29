@@ -1,5 +1,6 @@
 // Registration repository
 const Registration = require("../models/Registration");
+const { isValidAadhaar } = require("../utils/aadhaar");
 const Rating = require("../models/Rating");
 const DashboardData = require("../models/DashboardData");
 const UsersCount = require("../models/UsersCount");
@@ -60,6 +61,18 @@ class RegistrationRepository {
     if (!data.numberOfChildren)
       errors.push("Number of children is required.");
 
+    if (!data.district || !String(data.district).trim())
+      errors.push("District is required.");
+
+    if (!data.fatherAadhaar || !isValidAadhaar(data.fatherAadhaar))
+      errors.push("Father Aadhaar must be a valid 12-digit Aadhaar number.");
+
+    if (!data.motherAadhaar || !isValidAadhaar(data.motherAadhaar))
+      errors.push("Mother Aadhaar must be a valid 12-digit Aadhaar number.");
+
+    if (!data.spouseAadhaar || !isValidAadhaar(data.spouseAadhaar))
+      errors.push("Spouse Aadhaar must be a valid 12-digit Aadhaar number.");
+
     if (!Array.isArray(data.children) || data.children.length === 0) {
       errors.push("Children details are required.");
     } else {
@@ -69,6 +82,9 @@ class RegistrationRepository {
 
         if (!child.qualification)
           errors.push(`Child ${index + 1} qualification is required.`);
+
+        if (!child.aadhaar || !isValidAadhaar(child.aadhaar))
+          errors.push(`Child ${index + 1} Aadhaar must be a valid 12-digit Aadhaar number.`);
       });
     }
 
@@ -81,8 +97,8 @@ class RegistrationRepository {
     if (!data.email || !/^\S+@\S+\.\S+$/.test(data.email))
       errors.push("Valid email is required.");
 
-    if (data.aadhaar && !/^[0-9]{12}$/.test(data.aadhaar))
-      errors.push("Aadhaar must be 12 digits.");
+    if (!data.aadhaar || !isValidAadhaar(data.aadhaar))
+      errors.push("Aadhaar must be a valid 12-digit Aadhaar number.");
 
     if (errors.length > 0)
       throw new Error(errors.join(" "));
@@ -264,10 +280,12 @@ class RegistrationRepository {
           { houseNo: regex },
           { street: regex },
           { city: regex },
+          { district: regex },
           { mandal: regex },
-          { taluka: regex },
           { village: regex },
-          { villageGroup: regex },
+          { fatherAadhaar: regex },
+          { motherAadhaar: regex },
+          { spouseAadhaar: regex },
           { qualification: regex },
           { course: regex },
           { status: regex },
@@ -321,10 +339,12 @@ class RegistrationRepository {
         { houseNo: regex },
         { street: regex },
         { city: regex },
+        { district: regex },
         { mandal: regex },
-        { taluka: regex },
         { village: regex },
-        { villageGroup: regex },
+        { fatherAadhaar: regex },
+        { motherAadhaar: regex },
+        { spouseAadhaar: regex },
         { qualification: regex },
         { course: regex },
       ];

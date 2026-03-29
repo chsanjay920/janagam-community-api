@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 
 const childSchema = new mongoose.Schema({
   name: String,
-  qualification: String
+  qualification: String,
+  aadhaar: String
 }, { _id: false });
 
 const registrationSchema = new mongoose.Schema({
@@ -28,6 +29,9 @@ const registrationSchema = new mongoose.Schema({
 
   email: String,
   aadhaar: String,
+  fatherAadhaar: String,
+  motherAadhaar: String,
+  spouseAadhaar: String,
   subCaste: String,
   rationCardNo: String,
   spouseName: String,
@@ -46,11 +50,10 @@ const registrationSchema = new mongoose.Schema({
   houseNo: String,
   street: String,
   city: String,
+  district: String,
 
   mandal: String,
-  taluka: String,
   village: String,
-  villageGroup: String,
 
   qualification: String,
   course: String,
