@@ -35,6 +35,13 @@ exports.create = async (req, res) => {
         const result = await service.registerMember(data);
         res.status(201).json(result);
       } catch (err) {
+        console.error("R2 upload failed:", {
+          name: err?.name,
+          message: err?.message,
+          httpStatusCode: err?.$metadata?.httpStatusCode,
+          requestId: err?.$metadata?.requestId,
+          extendedRequestId: err?.$metadata?.extendedRequestId,
+        });
         res.status(500).json({ message: err.message });
       }
     } else {
