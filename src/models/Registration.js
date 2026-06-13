@@ -61,7 +61,7 @@ const registrationSchema = new mongoose.Schema({
   document: String,
 
   documentId: {
-    type: mongoose.Schema.Types.ObjectId
+    type: mongoose.Schema.Types.Mixed
   },
 
   status: {

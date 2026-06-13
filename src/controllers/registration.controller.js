@@ -1,7 +1,8 @@
 const service = require("../services/registration.service");
 const mongoose = require("mongoose");
 const connectDB = require("../config/db");
-const { getGridFSBucket } = require("../config/gridFs");
+const { getR2Client } = require("../config/r2");
+const { PutObjectCommand } = require("@aws-sdk/client-s3");
 
 
 exports.create = async (req, res) => {
@@ -16,26 +17,26 @@ exports.create = async (req, res) => {
       }
     }
     if (req.file) {
-      const bucket = getGridFSBucket();
+      try {
+        const client = getR2Client();
+        const bucketName = process.env.R2_BUCKET_NAME;
+        const key = `${Date.now()}-${req.file.originalname}`;
 
-      const uploadStream = bucket.openUploadStream(req.file.originalname, {
-        contentType: req.file.mimetype
-      });
+        const command = new PutObjectCommand({
+          Bucket: bucketName,
+          Key: key,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype,
+        });
 
-      uploadStream.end(req.file.buffer);
-
-      uploadStream.on("finish", async () => {
-        data.documentId = uploadStream.id; // 🔥 store ObjectId reference
+        await client.send(command);
+        data.documentId = key; // Store R2 key reference
 
         const result = await service.registerMember(data);
-
         res.status(201).json(result);
-      });
-
-      uploadStream.on("error", (err) => {
+      } catch (err) {
         res.status(500).json({ message: err.message });
-      });
-
+      }
     } else {
       const result = await service.registerMember(data);
       res.status(201).json(result);
@@ -62,8 +63,12 @@ exports.requestVerification = async (req, res) => {
 };
 exports.verifyOTP = async (req, res) => {
   await connectDB();
-  res.json(await service.verifyOTP(req.body.mobileNumber, req.body.otp));
-}
+  const result = await service.verifyOTP(req.body.mobileNumber, req.body.otp);
+  if (result.message) {
+    return res.status(400).json(result);
+  }
+  res.json(result);
+};
 exports.updateDashboardData = async (req, res) => {
   await connectDB();
   var ip = req.headers["x-forwarded-for"]?.split(",")[0] || 
@@ -92,7 +97,16 @@ exports.list = async (_, res) => {
 
 exports.gridlist = async (req, res) => {
   await connectDB();
-  res.json(await service.getGridList(req.query.filter, req.query.pagenumber, req.query.pagesize, req.query.sortby, req.query.sortdirection));
+  res.json(
+    await service.getGridList(
+      req.query.filter,
+      req.query.status,
+      req.query.pagenumber,
+      req.query.pagesize,
+      req.query.sortby,
+      req.query.sortdirection
+    )
+  );
 };
 
 exports.approve = async (req, res) => {
@@ -104,10 +118,51 @@ exports.reject = async (req, res) => {
   await connectDB();
   res.json(await service.reject(req.params.id));
 };
+exports.deleteMember = async (req, res) => {
+  await connectDB();
+  try {
+    const deleted = await service.deleteMember(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Registration not found." });
+    }
+    res.json({ message: "Registration deleted successfully." });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
 
 exports.publicList = async (req, res) => {
   await connectDB();
-  res.json(await service.getApproved(req.query.filter, req.query.pagenumber, req.query.pagesize, req.query.sortby, req.query.sortdirection));
+  res.json(
+    await service.getApproved(
+      req.query.filter,
+      req.query.status,
+      req.query.pagenumber,
+      req.query.pagesize,
+      req.query.sortby,
+      req.query.sortdirection
+    )
+  );
+};
+
+exports.update = async (req, res) => {
+  await connectDB();
+  try {
+    const result = await service.updateMember(req.params.id, req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+exports.publicUpdate = async (req, res) => {
+  await connectDB();
+  try {
+    const result = await service.publicUpdateMember(req.params.id, req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
 };
 
 

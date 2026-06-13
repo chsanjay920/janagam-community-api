@@ -6,19 +6,122 @@ const DashboardData = require("../models/DashboardData");
 const UsersCount = require("../models/UsersCount");
 const RegistrationCounter = require("../models/RegistrationCounter");
 const jwt = require("jsonwebtoken");
-const twilio = require('twilio');
-const https = require('https');
-
-const agent = new https.Agent({
-  keepAlive: false
-});
-
-const client = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN, {
-  httpClient: new twilio.RequestClient({
-    agent
-  })
-});
+const axios = require("axios");
+const MobileVerification = require("../models/MobileVerfication");
 class RegistrationRepository {
+  sanitizeRegistrationUpdate(data, { publicEdit = false } = {}) {
+    const allowedFields = [
+      "firstName",
+      "middleName",
+      "lastName",
+      "gender",
+      "dob",
+      "age",
+      "maritalStatus",
+      "mobile",
+      "alternateMobile",
+      "email",
+      "aadhaar",
+      "subCaste",
+      "rationCardNo",
+      "fatherName",
+      "fatherOccupation",
+      "fatherAadhaar",
+      "motherName",
+      "motherOccupation",
+      "motherAadhaar",
+      "houseNo",
+      "spouseName",
+      "spouseOccupation",
+      "spouseAadhaar",
+      "numberOfChildren",
+      "children",
+      "street",
+      "city",
+      "district",
+      "mandal",
+      "village",
+      "qualification",
+      "course",
+      "jobDescription",
+      "documentId",
+      "document",
+      "status",
+    ];
+
+    const payload = {};
+    allowedFields.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        payload[key] = data[key];
+      }
+    });
+
+    if (publicEdit) {
+      delete payload.mobile;
+      delete payload.email;
+    }
+
+    return payload;
+  }
+
+  async validateRegistration(data, { publicEdit = false, existingRecord = null } = {}) {
+    const errors = [];
+    const payload = data || {};
+
+    if (publicEdit) {
+      if (
+        !payload.mobileVerficationToken ||
+        !(await this.validatedToken(payload.mobileVerficationToken, existingRecord?.mobile || payload.mobile))
+      ) {
+        errors.push("Mobile number verification failed.");
+      }
+    }
+
+    if (!payload.firstName || !payload.lastName)
+      errors.push("First name and last name are required.");
+
+    if (!payload.gender)
+      errors.push("Gender is required.");
+
+    if (!payload.dob)
+      errors.push("Date of birth is required.");
+
+    if (payload.mobile && !/^[0-9]{10}$/.test(payload.mobile))
+      errors.push("Valid 10-digit mobile number is required.");
+
+    if (!publicEdit && !payload.mobile)
+      errors.push("Valid 10-digit mobile number is required.");
+
+    if (payload.email && !/^\S+@\S+\.\S+$/.test(payload.email))
+      errors.push("Valid email is required.");
+
+    if (!payload.aadhaar || !isValidAadhaar(payload.aadhaar))
+      errors.push("Aadhaar must be a valid 12-digit Aadhaar number.");
+
+    if (!payload.district || !String(payload.district).trim())
+      errors.push("District is required.");
+
+    if (payload.fatherAadhaar && !isValidAadhaar(payload.fatherAadhaar))
+      errors.push("Father Aadhaar must be a valid 12-digit Aadhaar number.");
+
+    if (payload.motherAadhaar && !isValidAadhaar(payload.motherAadhaar))
+      errors.push("Mother Aadhaar must be a valid 12-digit Aadhaar number.");
+
+    if (payload.spouseAadhaar && !isValidAadhaar(payload.spouseAadhaar))
+      errors.push("Spouse Aadhaar must be a valid 12-digit Aadhaar number.");
+
+    if (Array.isArray(payload.children)) {
+      payload.children.forEach((child, index) => {
+        if (child.aadhaar && !isValidAadhaar(child.aadhaar))
+          errors.push(`Child ${index + 1} Aadhaar must be a valid 12-digit Aadhaar number.`);
+      });
+    }
+
+    if (errors.length > 0) {
+      throw new Error(errors.join(" "));
+    }
+  }
+
   async validatedToken(token, mobileNumber) {
     console.log("Validating token for mobile number:", mobileNumber);
     try {
@@ -33,75 +136,7 @@ class RegistrationRepository {
     return false;
   }
   async create(data) {
-    const errors = [];
-    if (
-      !data.mobileVerficationToken ||
-      !(await this.validatedToken(data.mobileVerficationToken, data.mobile))
-    ) {
-      errors.push("Mobile number verification failed.");
-    }
-    if (!data.firstName || !data.lastName)
-      errors.push("First name and last name are required.");
-
-    if (!data.gender)
-      errors.push("Gender is required.");
-
-    if (!data.dob)
-      errors.push("Date of birth is required.");
-
-    if (!data.rationCardNo)
-      errors.push("Ration card number is required.");
-
-    if (!data.spouseName)
-      errors.push("Spouse name is required.");
-
-    if (!data.spouseOccupation)
-      errors.push("Spouse occupation is required.");
-
-    if (!data.numberOfChildren)
-      errors.push("Number of children is required.");
-
-    if (!data.district || !String(data.district).trim())
-      errors.push("District is required.");
-
-    if (!data.fatherAadhaar || !isValidAadhaar(data.fatherAadhaar))
-      errors.push("Father Aadhaar must be a valid 12-digit Aadhaar number.");
-
-    if (!data.motherAadhaar || !isValidAadhaar(data.motherAadhaar))
-      errors.push("Mother Aadhaar must be a valid 12-digit Aadhaar number.");
-
-    if (!data.spouseAadhaar || !isValidAadhaar(data.spouseAadhaar))
-      errors.push("Spouse Aadhaar must be a valid 12-digit Aadhaar number.");
-
-    if (!Array.isArray(data.children) || data.children.length === 0) {
-      errors.push("Children details are required.");
-    } else {
-      data.children.forEach((child, index) => {
-        if (!child.name)
-          errors.push(`Child ${index + 1} name is required.`);
-
-        if (!child.qualification)
-          errors.push(`Child ${index + 1} qualification is required.`);
-
-        if (!child.aadhaar || !isValidAadhaar(child.aadhaar))
-          errors.push(`Child ${index + 1} Aadhaar must be a valid 12-digit Aadhaar number.`);
-      });
-    }
-
-    if (!data.jobDescription)
-      errors.push("Job description is required.");
-
-    if (!data.mobile || !/^[0-9]{10}$/.test(data.mobile))
-      errors.push("Valid 10-digit mobile number is required.");
-
-    if (!data.email || !/^\S+@\S+\.\S+$/.test(data.email))
-      errors.push("Valid email is required.");
-
-    if (!data.aadhaar || !isValidAadhaar(data.aadhaar))
-      errors.push("Aadhaar must be a valid 12-digit Aadhaar number.");
-
-    if (errors.length > 0)
-      throw new Error(errors.join(" "));
+    await this.validateRegistration(data);
 
     const counter = await RegistrationCounter.findByIdAndUpdate(
       { _id: "registrationId" },
@@ -113,8 +148,44 @@ class RegistrationRepository {
 
     return Registration.create(data);
   }
+
+  async updateById(id, data, { publicEdit = false } = {}) {
+    const existing = await Registration.findById(id);
+    if (!existing) {
+      throw new Error("Registration not found.");
+    }
+
+    const payload = this.sanitizeRegistrationUpdate(data, { publicEdit });
+
+    if (publicEdit) {
+      if (payload.mobile && payload.mobile !== existing.mobile) {
+        throw new Error("Mobile number cannot be changed in public edit.");
+      }
+      if (payload.email && payload.email !== existing.email) {
+        throw new Error("Email cannot be changed in public edit.");
+      }
+      payload.mobile = existing.mobile;
+      payload.email = existing.email;
+    }
+
+    const validationPayload = { ...existing.toObject(), ...payload };
+    if (publicEdit && data.mobileVerficationToken) {
+      validationPayload.mobileVerficationToken = data.mobileVerficationToken;
+    }
+
+    await this.validateRegistration(validationPayload, {
+      publicEdit,
+      existingRecord: existing,
+    });
+
+    return Registration.findByIdAndUpdate(id, payload, { new: true });
+  }
   async requestVerification(mobileNumber) {
-    const result = await this.sendOtp("+91" + mobileNumber);
+    if (process.env.OTP_VALIDATION_ENABLED === 'false') {
+      return { message: "OTP validation is disabled. Use static OTP." };
+    }
+
+    const result = await this.sendOtp(mobileNumber);
 
     if (!result) {
       throw new Error("Failed to send OTP");
@@ -127,14 +198,20 @@ class RegistrationRepository {
 
     while (attempts--) {
       try {
-        const verification = await client.verify.v2
-          .services(process.env.VERIFY_SERVICE_SID)
-          .verifications.create({
-            to: mobileNumber,
-            channel: 'sms'
-          });
+        const url = `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${mobileNumber}/AUTOGEN`;
+        const response = await axios.get(url);
 
-        return verification;
+        if (response.data && response.data.Status === "Success") {
+          const sessionId = response.data.Details;
+          await MobileVerification.findOneAndUpdate(
+            { mobileNumber },
+            { sessionId },
+            { upsert: true, new: true }
+          );
+          return response.data;
+        } else {
+          throw new Error("2Factor API Error: " + JSON.stringify(response.data));
+        }
       } catch (error) {
         if (attempts === 0) {
           console.error('Final OTP Error:', error);
@@ -145,28 +222,42 @@ class RegistrationRepository {
   }
   async checkOtp(phoneNumber, codeFromUser) {
     try {
-      const verificationCheck = await client.verify.v2.services(process.env.VERIFY_SERVICE_SID)
-        .verificationChecks
-        .create({
-          to: phoneNumber,
-          code: codeFromUser
-        });
+      const verificationRecord = await MobileVerification.findOne({ mobileNumber: phoneNumber });
+      if (!verificationRecord || !verificationRecord.sessionId) {
+        console.log('No OTP session found.');
+        return false;
+      }
 
-      if (verificationCheck.status === 'approved') {
+      const sessionId = verificationRecord.sessionId;
+      const url = `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/VERIFY/${sessionId}/${codeFromUser}`;
+      const response = await axios.get(url);
+
+      if (response.data && response.data.Status === "Success" && response.data.Details === "OTP Matched") {
         console.log('User Verified Successfully!');
+        // Optional: clear the session
+        await MobileVerification.deleteOne({ mobileNumber: phoneNumber });
         return true;
       } else {
-        console.log('Invalid OTP.');
+        console.log('Invalid OTP.', response.data);
         return false;
       }
     } catch (error) {
-      console.error('Error verifying OTP:', error);
+      console.error('Error verifying OTP:', error.response?.data || error.message);
+      return false;
     }
   }
   async verifyOTP(mobileNumber, otp) {
     console.log("Signing token with mobileNumber:", mobileNumber);
     const token = this.generateTokenWithMobileNumber(mobileNumber);
-    if (await this.checkOtp("+91" + mobileNumber, otp)) {
+
+    if (process.env.OTP_VALIDATION_ENABLED === 'false') {
+      if (otp === process.env.STATIC_OTP) {
+        return { token };
+      }
+      return { message: "Invalid OTP" };
+    }
+
+    if (await this.checkOtp(mobileNumber, otp)) {
       return { token };
     }
     return { message: "Invalid OTP" };
@@ -247,6 +338,7 @@ class RegistrationRepository {
   }
   async findAllWithFilters(
     filter,
+    status,
     pageNumber,
     pageSize,
     sortBy,
@@ -292,6 +384,9 @@ class RegistrationRepository {
         ],
       };
     }
+    if (status) {
+      queryFilter.status = status;
+    }
 
     const data = await Registration.find(queryFilter)
       .sort({ [sortBy]: sortDirection === "desc" ? -1 : 1 })
@@ -310,7 +405,10 @@ class RegistrationRepository {
   updateStatus(id, status) {
     return Registration.findByIdAndUpdate(id, { status }, { new: true });
   }
-  async findApproved(filter, pageNumber, pageSize, sortBy, sortDirection) {
+  deleteById(id) {
+    return Registration.findByIdAndDelete(id);
+  }
+  async findApproved(filter, status, pageNumber, pageSize, sortBy, sortDirection) {
     const skip = (pageNumber - 1) * pageSize;
 
     const queryFilter = {
@@ -348,6 +446,9 @@ class RegistrationRepository {
         { qualification: regex },
         { course: regex },
       ];
+    }
+    if (status) {
+      queryFilter.status = status;
     }
 
     const data = await Registration.find(queryFilter)
