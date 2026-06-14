@@ -10,7 +10,7 @@ app.use(express.json());
 const allowedOrigins = [
   'http://localhost:4200',
   'https://janagam-community-web-test.vercel.app',
-  'https://mala-jangam-community.vercel.app/',
+  'https://mala-jangam-community.vercel.app',
   
 ];
 
